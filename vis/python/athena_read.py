@@ -771,12 +771,14 @@ def athdf(filename, raw=False, data=None, quantities=None, dtype=None, level=Non
                                              quantity_indices):
                     block_data = f[dataset][index, block_num, :]
                     if s > 1:
-                        if nx1 > 1:
-                            block_data = np.repeat(block_data, s, axis=2)[:, :, il_s:iu_s]
-                        if nx2 > 1:
-                            block_data = np.repeat(block_data, s, axis=1)[:, jl_s:ju_s, :]
-                        if nx3 > 1:
-                            block_data = np.repeat(block_data, s, axis=0)[kl_s:ku_s, :, :]
+                        ind = np.array([[kl_s,ku_s], [jl_s,ju_s], [il_s,iu_s]])
+                        sizes = np.array([ku_s-kl_s, ju_s-jl_s, iu_s-il_s])
+                        indices = np.argsort(sizes)[np.nonzero(sizes[np.argsort(sizes)])]
+                        for i in range(len(indices)):
+                          block_data = np.take(np.repeat(block_data, s, axis=indices[i]),
+                                               np.arange(ind[indices[i]][0],
+                                                         ind[indices[i]][1]),
+                                                         axis=indices[i])                    
                         data[q][kl_d:ku_d, jl_d:ju_d, il_d:iu_d] = block_data
                     else:
                         data[q][kl_d:ku_d, jl_d:ju_d, il_d:iu_d] = block_data[kl_s:ku_s,
